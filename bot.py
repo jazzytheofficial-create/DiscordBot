@@ -7,18 +7,12 @@ import re
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from keep_alive import keep_alive
 
 # -----------------------------
 # Load token
 # -----------------------------
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
-# -----------------------------
-# Keep bot alive
-# -----------------------------
-keep_alive()
 
 # -----------------------------
 # Setup bot
@@ -40,33 +34,33 @@ guess_players = {
         ("He plays for PSG and is from Argentina", "messi"),
         ("He plays for Al-Nassr and is from Portugal", "ronaldo"),
         ("He plays for Inter Miami now, also Argentine", "messi"),
-        ("Plays for Liverpool and is from Egypt", "salah"),
-        ("Plays for Tottenham and is South Korean", "son"),
+        ("French midfielder at Real Madrid", "camavinga"),
+        ("Norwegian striker at Manchester City", "haaland"),
     ],
     "normal": [
+        ("Egyptian King at Liverpool", "salah"),
+        ("Plays for Spurs and is from South Korea", "son"),
         ("Belgian midfielder at Man City", "de bruyne"),
-        ("French forward at Real Madrid", "mbappe"),
-        ("Portuguese striker at Juventus", "ronaldo"),
-        ("Argentine midfielder at Man City", "diaz"),
-        ("English midfielder at Arsenal", "jesus"),
+        ("English winger at Arsenal", "saka"),
+        ("Italian goalkeeper at Juventus", "donnarumma"),
     ],
     "hard": [
-        ("Won Ballon d'Or in 2006, Italian", "cannavaro"),
-        ("Former Brazilian striker, 'The Phenomenon'", "ronaldo"),
-        ("Dutch winger, retired in 2019, bald", "robben"),
-        ("German striker, Bayern legend", "muller"),
-        ("Spanish midfielder, Barcelona", "xavi"),
+        ("Won the Ballon d'Or in 2006, Italian", "cannavaro"),
+        ("Former Brazilian striker, called 'The Phenomenon'", "ronaldo"),
+        ("Dutch winger, retired in 2019, bald head", "robben"),
+        ("Spanish midfielder, played for Barcelona, nickname Xavi", "xavi"),
+        ("Argentine striker, played for Napoli", "higuain"),
     ],
     "extreme": [
-        ("Mexican goalkeeper famous for 2014 saves", "ochoa"),
+        ("Mexican goalkeeper famous for 2014 World Cup saves", "ochoa"),
         ("Japanese midfielder, Celtic legend", "nakamura"),
-        ("Played for Wigan, scored FA Cup Final winner 2013", "ben watson"),
-        ("Uruguayan striker, Liverpool legend", "suarez"),
-        ("Polish striker at Bayern", "lewandowski"),
+        ("Played for Wigan, scored FA Cup Final winner in 2013", "ben watson"),
+        ("Cameroonian striker, retired 2009, played in France", "samuel eto'o"),
+        ("German midfielder, won 2014 World Cup", "khedira"),
     ],
 }
 
-active_guess_games: dict[str, tuple[str, str]] = {}  # key: user_id, value: (difficulty, answer)
+active_guess_games: dict[str, tuple[str, str]] = {}  # key: user, value: (difficulty, answer)
 
 # -----------------------------
 # Events
@@ -77,14 +71,14 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game(name="type !help"))
 
 # -----------------------------
-# Help
+# Help Command
 # -----------------------------
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(title="Bot Commands", description="Prefix: `!`", color=0x5865F2)
     embed.add_field(name="Moderation", value=(
         "`!kick @user [reason]`\n"
-        "`!unbanned @user [reason]`\n"
+        "`!ban @user [reason]`\n"
         "`!unboomed user_id`\n"
         "`!timeout @user <seconds> [reason]`\n"
         "`!clear <count>`"
@@ -94,9 +88,7 @@ async def help(ctx):
         "`!guesstheplayereasy` `!guesstheplayer` `!guesstheplayerhard` `!guesstheplayerextreme`\n"
         "`!gamenight` `!addgamenight <roblox link>`\n"
         "`!giveawaycreate <time in seconds> <prize>`\n"
-        "`!say <message>`\n"
-        "`!coinflip` `!roll` `!8ball <question>` `!dadjoke` `!truthordare`\n"
-        "`!biggame`"
+        "`!say <message>`"
     ), inline=False)
     await ctx.send(embed=embed)
 
@@ -110,14 +102,14 @@ async def kick(ctx, member: discord.Member, *, reason=None):
     await ctx.reply(f"👢 Kicked {member.mention}. Reason: {reason or 'no reason provided'}")
 
 @commands.has_permissions(ban_members=True)
-@bot.command(name="unbanned")
+@bot.command()
 async def ban(ctx, member: discord.Member, *, reason=None):
     await member.ban(reason=reason)
-    await ctx.reply(f"✅ Unbanned {member.mention}. Reason: {reason or 'no reason provided'}")
+    await ctx.reply(f"🔨 Unbanned {member.mention}. Reason: {reason or 'no reason provided'}")
 
 @commands.has_permissions(ban_members=True)
-@bot.command(name="unboomed")
-async def unban(ctx, user_id: int):
+@bot.command()
+async def unboomed(ctx, user_id: int):
     user = await bot.fetch_user(user_id)
     await ctx.guild.unban(user)
     await ctx.reply(f"♻️ Unboomed {user.mention}")
@@ -162,7 +154,7 @@ async def rps(ctx, choice: str):
     await ctx.reply(f"You: **{choice}** | Me: **{bot_choice}** → {outcome}")
 
 # -----------------------------
-# Game Night
+# Game Night Commands
 # -----------------------------
 @commands.has_permissions(manage_guild=True)
 @bot.command()
@@ -175,7 +167,7 @@ async def addgamenight(ctx, link: str):
 @bot.command()
 async def gamenight(ctx):
     if not gamenights:
-        return await ctx.reply("No gamenights added yet.")
+        return await ctx.reply("No gamenights have been added yet.")
     embed = discord.Embed(title="Upcoming Game Nights", color=0x2ecc71)
     for i, g in enumerate(gamenights, 1):
         embed.add_field(name=f"Game {i}", value=g, inline=False)
@@ -237,58 +229,8 @@ async def say(ctx, *, message: str):
     await ctx.send(message)
 
 # -----------------------------
-# Extra Fun Commands
-# -----------------------------
-@bot.command()
-async def coinflip(ctx):
-    await ctx.reply(f"🪙 {'Heads' if random.randint(0,1) == 0 else 'Tails'}")
-
-@bot.command()
-async def roll(ctx, sides: int=6):
-    await ctx.reply(f"🎲 Rolled a {random.randint(1, sides)}")
-
-@bot.command()
-async def _8ball(ctx, *, question):
-    responses = ["Yes", "No", "Maybe", "Definitely", "Ask again later"]
-    await ctx.reply(f"🎱 Question: {question}\nAnswer: {random.choice(responses)}")
-
-@bot.command()
-async def dadjoke(ctx):
-    jokes = ["I would tell you a joke about pizza, but it's too cheesy!", "Why don't skeletons fight each other? They don't have the guts!"]
-    await ctx.reply(random.choice(jokes))
-
-@bot.command()
-async def truthordare(ctx):
-    await ctx.reply(random.choice(["Truth: What's your favorite color?", "Dare: Post a funny face!"]))
-
-# -----------------------------
-# Big Game Command
-# -----------------------------
-@bot.command()
-async def biggame(ctx):
-    number = random.randint(1, 50)
-    await ctx.reply(f"🎮 Big Game! Guess a number between 1 and 50. Use `!guessnumber <n>`")
-
-active_biggame: dict[str,int] = {}
-
-@bot.command()
-async def guessnumber(ctx, number: int):
-    key = str(ctx.author.id)
-    if key not in active_biggame:
-        active_biggame[key] = random.randint(1, 50)
-        await ctx.reply("Game started! Try again!")
-        return
-    target = active_biggame[key]
-    if number == target:
-        await ctx.reply(f"🎉 Correct {ctx.author.mention}! It was {target}")
-        del active_biggame[key]
-    elif number < target:
-        await ctx.reply("Too low!")
-    else:
-        await ctx.reply("Too high!")
-
-# -----------------------------
 # Run bot
 # -----------------------------
 if __name__ == "__main__":
     bot.run(TOKEN)
+
