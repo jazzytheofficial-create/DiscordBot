@@ -1,10 +1,11 @@
 """
-TadzzyBot - Fixed version with all errors resolved
-- Added missing imports
-- Fixed variable references
-- Corrected function definitions
-- Resolved circular dependencies
-- Fixed file operations
+TadzzyBot - Enhanced version with full shop, trading system, selling system and passive income
+- Added comprehensive shop system with buying functionality
+- Enhanced trading system with two-way trades
+- Improved selling system with dynamic pricing
+- Advanced passive income generation based on card rarity and price
+- Cleaner help panels with organized sections
+- Income tracking and reporting commands
 """
 
 import discord
@@ -60,6 +61,7 @@ data = {
     "gamenights": [],         # list of links
     "auctions": {},           # player_name: auction dict
     "guess_db": {},           # we'll fill programmatically (clues)
+    "trades": {},             # trade_id: trade dict
     "settings": {             # future expansions
         "starting_balance": STARTING_BALANCE
     }
@@ -72,73 +74,73 @@ users = {}
 # Footballers & Cards (base)
 # -----------------------------
 footballers = [
-    # Secret
-    {"name": "Tadstarman", "rarity": "Secret", "price": 100000000, "color": 0x000000},
-    {"name": "Jeeves", "rarity": "Secret", "price": 95000000, "color": 0x000000},
-    {"name": "Jazzy", "rarity": "Secret", "price": 90000000, "color": 0x000000},
+    # Secret - Highest passive income generators
+    {"name": "Tadstarman", "rarity": "Secret", "price": 100000000, "color": 0x000000, "income_rate": 5000},
+    {"name": "Jeeves", "rarity": "Secret", "price": 95000000, "color": 0x000000, "income_rate": 4750},
+    {"name": "Jazzy", "rarity": "Secret", "price": 90000000, "color": 0x000000, "income_rate": 4500},
 
     # Expensive
-    {"name": "JustMatt", "rarity": "Expensive", "price": 5000000, "color": 0x00ff00},
+    {"name": "JustMatt", "rarity": "Expensive", "price": 5000000, "color": 0x00ff00, "income_rate": 2500},
 
     # Mythics
-    {"name": "Leo", "rarity": "Mythic", "price": 3000000, "color": 0xff0000},
-    {"name": "Gdigz", "rarity": "Mythic", "price": 2900000, "color": 0xff0000},
-    {"name": "Pulse", "rarity": "Mythic", "price": 2800000, "color": 0xff0000},
-    {"name": "Barou", "rarity": "Mythic", "price": 2750000, "color": 0xff0000},
-    {"name": "Arving8", "rarity": "Mythic", "price": 2700000, "color": 0xff0000},
+    {"name": "Leo", "rarity": "Mythic", "price": 3000000, "color": 0xff0000, "income_rate": 1500},
+    {"name": "Gdigz", "rarity": "Mythic", "price": 2900000, "color": 0xff0000, "income_rate": 1450},
+    {"name": "Pulse", "rarity": "Mythic", "price": 2800000, "color": 0xff0000, "income_rate": 1400},
+    {"name": "Barou", "rarity": "Mythic", "price": 2750000, "color": 0xff0000, "income_rate": 1375},
+    {"name": "Arving8", "rarity": "Mythic", "price": 2700000, "color": 0xff0000, "income_rate": 1350},
 
     # Legendary
-    {"name": "deadp00l295", "rarity": "Legendary", "price": 2000067, "color": 0xffff00},
-    {"name": "Messi", "rarity": "Legendary", "price": 1500000, "color": 0xffff00},
-    {"name": "Ronaldo", "rarity": "Legendary", "price": 1400000, "color": 0xffff00},
-    {"name": "Salah", "rarity": "Legendary", "price": 1300000, "color": 0xffff00},
-    {"name": "Son", "rarity": "Legendary", "price": 1200000, "color": 0xffff00},
-    {"name": "De Bruyne", "rarity": "Legendary", "price": 1100000, "color": 0xffff00},
-    {"name": "Modric", "rarity": "Legendary", "price": 1050000, "color": 0xffff00},
-    {"name": "Lewandowski", "rarity": "Legendary", "price": 1000000, "color": 0xffff00},
-    {"name": "Mbappe", "rarity": "Legendary", "price": 980000, "color": 0xffff00},
-    {"name": "Neymar", "rarity": "Legendary", "price": 960000, "color": 0xffff00},
+    {"name": "deadp00l295", "rarity": "Legendary", "price": 2000067, "color": 0xffff00, "income_rate": 1000},
+    {"name": "Messi", "rarity": "Legendary", "price": 1500000, "color": 0xffff00, "income_rate": 750},
+    {"name": "Ronaldo", "rarity": "Legendary", "price": 1400000, "color": 0xffff00, "income_rate": 700},
+    {"name": "Salah", "rarity": "Legendary", "price": 1300000, "color": 0xffff00, "income_rate": 650},
+    {"name": "Son", "rarity": "Legendary", "price": 1200000, "color": 0xffff00, "income_rate": 600},
+    {"name": "De Bruyne", "rarity": "Legendary", "price": 1100000, "color": 0xffff00, "income_rate": 550},
+    {"name": "Modric", "rarity": "Legendary", "price": 1050000, "color": 0xffff00, "income_rate": 525},
+    {"name": "Lewandowski", "rarity": "Legendary", "price": 1000000, "color": 0xffff00, "income_rate": 500},
+    {"name": "Mbappe", "rarity": "Legendary", "price": 980000, "color": 0xffff00, "income_rate": 490},
+    {"name": "Neymar", "rarity": "Legendary", "price": 960000, "color": 0xffff00, "income_rate": 480},
 
     # Epics
-    {"name": "Haaland", "rarity": "Epic", "price": 850000, "color": 0x800080},
-    {"name": "Benzema", "rarity": "Epic", "price": 820000, "color": 0x800080},
-    {"name": "Vinicius Jr", "rarity": "Epic", "price": 800000, "color": 0x800080},
-    {"name": "Kane", "rarity": "Epic", "price": 780000, "color": 0x800080},
-    {"name": "Joy", "rarity": "Epic", "price": 750000, "color": 0x800080},
+    {"name": "Haaland", "rarity": "Epic", "price": 850000, "color": 0x800080, "income_rate": 425},
+    {"name": "Benzema", "rarity": "Epic", "price": 820000, "color": 0x800080, "income_rate": 410},
+    {"name": "Vinicius Jr", "rarity": "Epic", "price": 800000, "color": 0x800080, "income_rate": 400},
+    {"name": "Kane", "rarity": "Epic", "price": 780000, "color": 0x800080, "income_rate": 390},
+    {"name": "Joy", "rarity": "Epic", "price": 750000, "color": 0x800080, "income_rate": 375},
 
-    # Commons
-    {"name": "Rashford", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Sancho", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Pedri", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Gavi", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Musiala", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Kroos", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Joel", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Axel", "rarity": "Common", "price": 20000, "color": 0x0000ff},
-    {"name": "Dim", "rarity": "Common", "price": 17000, "color": 0x0000ff},
-    {"name": "Ex_xpo", "rarity": "Common", "price": 16000, "color": 0x0000ff},
-    {"name": "Yousef", "rarity": "Common", "price": 15000, "color": 0x0000ff},
-    {"name": "Mazzy", "rarity": "Common", "price": 14000, "color": 0x0000ff},
-    {"name": "lizardboyy", "rarity": "Common", "price": 13000, "color": 0x0000ff},
-    {"name": "NtanielGamer6", "rarity": "Common", "price": 12000, "color": 0x0000ff},
-    {"name": "kanye", "rarity": "Common", "price": 11000, "color": 0x0000ff},
-    {"name": "salvas", "rarity": "Common", "price": 10000, "color": 0x0000ff},
-    {"name": "Eggham", "rarity": "Common", "price": 9000, "color": 0x0000ff},
-    {"name": "Ducky", "rarity": "Common", "price": 8000, "color": 0x0000ff},
-    {"name": "Kaan", "rarity": "Common", "price": 7000, "color": 0x0000ff},
-    {"name": "Krosspy", "rarity": "Common", "price": 6000, "color": 0x0000ff},
-    {"name": "Tmerri", "rarity": "Common", "price": 5000, "color": 0x0000ff},
-    {"name": "Quixy", "rarity": "Common", "price": 4000, "color": 0x0000ff},
-    {"name": "Alexander Isak", "rarity": "Common", "price": 3000, "color": 0x0000ff},
-    {"name": "Itoshi Sae", "rarity": "Common", "price": 2000, "color": 0x0000ff},
-    {"name": "Bachira", "rarity": "Common", "price": 1000, "color": 0x0000ff},
-    {"name": "Mr.Incredible", "rarity": "Common", "price": 500, "color": 0x0000ff},
+    # Commons - Lower income generators
+    {"name": "Rashford", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Sancho", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Pedri", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Gavi", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Musiala", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Kroos", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Joel", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Axel", "rarity": "Common", "price": 20000, "color": 0x0000ff, "income_rate": 10},
+    {"name": "Dim", "rarity": "Common", "price": 17000, "color": 0x0000ff, "income_rate": 8},
+    {"name": "Ex_xpo", "rarity": "Common", "price": 16000, "color": 0x0000ff, "income_rate": 8},
+    {"name": "Yousef", "rarity": "Common", "price": 15000, "color": 0x0000ff, "income_rate": 7},
+    {"name": "Mazzy", "rarity": "Common", "price": 14000, "color": 0x0000ff, "income_rate": 7},
+    {"name": "lizardboyy", "rarity": "Common", "price": 13000, "color": 0x0000ff, "income_rate": 6},
+    {"name": "NtanielGamer6", "rarity": "Common", "price": 12000, "color": 0x0000ff, "income_rate": 6},
+    {"name": "kanye", "rarity": "Common", "price": 11000, "color": 0x0000ff, "income_rate": 5},
+    {"name": "salvas", "rarity": "Common", "price": 10000, "color": 0x0000ff, "income_rate": 5},
+    {"name": "Eggham", "rarity": "Common", "price": 9000, "color": 0x0000ff, "income_rate": 4},
+    {"name": "Ducky", "rarity": "Common", "price": 8000, "color": 0x0000ff, "income_rate": 4},
+    {"name": "Kaan", "rarity": "Common", "price": 7000, "color": 0x0000ff, "income_rate": 3},
+    {"name": "Krosspy", "rarity": "Common", "price": 6000, "color": 0x0000ff, "income_rate": 3},
+    {"name": "Tmerri", "rarity": "Common", "price": 5000, "color": 0x0000ff, "income_rate": 2},
+    {"name": "Quixy", "rarity": "Common", "price": 4000, "color": 0x0000ff, "income_rate": 2},
+    {"name": "Alexander Isak", "rarity": "Common", "price": 3000, "color": 0x0000ff, "income_rate": 1},
+    {"name": "Itoshi Sae", "rarity": "Common", "price": 2000, "color": 0x0000ff, "income_rate": 1},
+    {"name": "Bachira", "rarity": "Common", "price": 1000, "color": 0x0000ff, "income_rate": 1},
+    {"name": "Mr.Incredible", "rarity": "Common", "price": 500, "color": 0x0000ff, "income_rate": 1},
 ]
 
 # Auto-generate more commons to reach 50+ players
 common_players = [f"Tadstarman Bot{i}" for i in range(1, 51 - len(footballers))]
 for i, name in enumerate(common_players):
-    footballers.append({"name": name, "rarity": "Common", "price": 150, "color": 0x0000ff})
+    footballers.append({"name": name, "rarity": "Common", "price": 150, "color": 0x0000ff, "income_rate": 1})
 
 # Normalizing helper
 def normalize_name(n: str) -> str:
@@ -211,7 +213,7 @@ def load_data():
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 file_data = json.load(f)
-            for k in ["tadbucks_balances", "tadzzy_points", "xp_levels", "user_collections", "gamenights", "auctions", "settings"]:
+            for k in ["tadbucks_balances", "tadzzy_points", "xp_levels", "user_collections", "gamenights", "auctions", "trades", "settings"]:
                 if k in file_data:
                     data[k] = file_data[k]
             print("✅ Loaded data from", DATA_FILE)
@@ -223,7 +225,7 @@ def load_data():
 def save_data():
     try:
         to_save = {
-            k: data[k] for k in ["tadbucks_balances", "tadzzy_points", "xp_levels", "user_collections", "gamenights", "auctions", "settings"]
+            k: data[k] for k in ["tadbucks_balances", "tadzzy_points", "xp_levels", "user_collections", "gamenights", "auctions", "trades", "settings"]
         }
         tmp = DATA_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -282,6 +284,7 @@ total_income_tracker = {}
 gamble_cooldowns: Dict[str, str] = {}
 active_guess_games: Dict[str, dict] = {}
 two_way_trades = {}
+pending_trades = {}
 
 # -----------------------------
 # Background tasks
@@ -299,20 +302,20 @@ async def passive_income():
     for uid, coll in data["user_collections"].items():
         total_income = 0
         for card in coll:
+            # Use the new income_rate field for more accurate passive income
+            income = card.get("income_rate", 1)
+            
+            # Add bonus based on rarity for extra scaling
             rarity = card.get("rarity", "Common")
-            price = card.get("price", 1000)
-
             if rarity == "Secret":
-                income = int(price * 0.002)
+                income = int(income * 1.5)  # 50% bonus
             elif rarity == "Mythic":
-                income = int(price * 0.0015)
+                income = int(income * 1.3)  # 30% bonus
             elif rarity == "Legendary":
-                income = int(price * 0.001)
+                income = int(income * 1.2)  # 20% bonus
             elif rarity == "Epic":
-                income = int(price * 0.0005)
-            else:
-                income = int(price * 0.0002)
-
+                income = int(income * 1.1)  # 10% bonus
+            
             total_income += income
 
         if total_income > 0:
@@ -396,26 +399,417 @@ async def on_message(message: discord.Message):
     await bot.process_commands(message)
 
 # -----------------------------
-# Help Command
+# Enhanced Help Commands with Clean Sections
 # -----------------------------
 @bot.command(name="help")
 async def help_command(ctx: commands.Context):
-    embed = discord.Embed(title="Tadzzy Bot — Commands", description="Prefix: `!`", color=0x5865F2)
-    embed.add_field(name="Moderation", value=(
-        "`!kick @user`, `!ban @user`, `!timeout @user <seconds>`, `!clear <count>`\n"
-        "`!mute @user <minutes>`, `!unmute @user`, `!warn @user <reason>`, `!slowmode <seconds>`, `!nick @user <newname>`"
-    ), inline=False)
-    embed.add_field(name="Fun & Games", value=(
-        "`!ping`, `!rps <rock|paper|scissors>`, `!coinflip`, `!dice <sides>`, `!meme`, `!compliment`, `!trivia`, `!dadjoke`, `!8ball <q>`\n"
-        "`!guesstheplayereasy`, `!guesstheplayer`, `!guesstheplayerhard`, `!guesstheplayerextreme`\n"
-        "`!gamenight`, `!addgamenight`, `!gamenightremove`, `!giveawaycreate`"
-    ), inline=False)
-    embed.add_field(name="Economy", value=(
-        "`!gamble <amount>`, `!fairgamble <amount>`, `!spawnauction <player>`, `!bid <player> <amount>`, `!closeauction <player>`\n"
-        "`!sell <player>`, `!collection`, `!allplayers`, `!checkbalance`, `!Tadbucks`, `!leaderboard`, `!points_leaderboard`"
-    ), inline=False)
-    embed.add_field(name="Admin", value="`!adminhelp` for admin-only utilities", inline=False)
+    embed = discord.Embed(
+        title="🤖 Tadzzy Bot — Command Center", 
+        description="Your ultimate Discord bot companion! Use `!` prefix for all commands.",
+        color=0x5865F2
+    )
+    
+    # Economy & Shop Section
+    embed.add_field(
+        name="💰 **Economy & Shop**",
+        value=(
+            "`!shop` - Browse the player shop\n"
+            "`!buy <player>` - Purchase a player card\n"
+            "`!sell <player>` - Sell your player card\n"
+            "`!checkbalance` - View your Tadbucks\n"
+            "`!collection` - View your cards\n"
+            "`!leaderboard` - Top Tadbucks players"
+        ),
+        inline=False
+    )
+    
+    # Trading & Auctions Section  
+    embed.add_field(
+        name="🔄 **Trading & Auctions**",
+        value=(
+            "`!trade @user <card_index>` - Trade with another player\n"
+            "`!accepttrade <trade_id>` - Accept a trade offer\n"
+            "`!spawnauction <player>` - Start an auction\n"
+            "`!bid <player> <amount>` - Bid on auctions\n"
+            "`!closeauction <player>` - Close auction (admin)"
+        ),
+        inline=False
+    )
+    
+    # Income & Progress Section
+    embed.add_field(
+        name="📈 **Income & Progress**",
+        value=(
+            "`!passiveincome` - Check last income payout\n"
+            "`!income total` - View total earnings\n"
+            "`!messagesleft` - XP needed for next level\n"
+            "`!points_leaderboard` - Top Tadzzy Points"
+        ),
+        inline=False
+    )
+    
+    # Games & Fun Section
+    embed.add_field(
+        name="🎮 **Games & Fun**",
+        value=(
+            "`!gamble <amount>` - Risk it all! (24h cooldown)\n"
+            "`!fairgamble <amount>` - 50/50 bet (level 50+)\n"
+            "`!guesstheplayer[easy/hard/extreme]` - Trivia games\n"
+            "`!rps <choice>` - Rock Paper Scissors\n"
+            "`!coinflip` - Flip a coin"
+        ),
+        inline=False
+    )
+    
+    # Utility Section
+    embed.add_field(
+        name="🛠️ **Utility & Info**",
+        value=(
+            "`!ping` - Check bot latency\n"
+            "`!allplayers` - Browse all available players\n"
+            "`!gamenight` - View game night links\n"
+            "`!adminhelp` - Admin commands (admins only)"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(
+        text="💡 Tip: Cards generate passive income every 30 minutes! Rarer cards = more money!",
+        icon_url=bot.user.avatar.url if bot.user.avatar else None
+    )
+    
     await ctx.send(embed=embed)
+
+# -----------------------------
+# Enhanced Admin Help
+# -----------------------------
+@commands.has_permissions(administrator=True)
+@bot.command()
+async def adminhelp(ctx: commands.Context):
+    embed = discord.Embed(
+        title="🛡️ Admin Command Center", 
+        description="Powerful tools for server administrators",
+        color=0xff0000
+    )
+    
+    # Moderation Section
+    embed.add_field(
+        name="🔨 **Moderation**",
+        value=(
+            "`!kick @user [reason]` - Kick a member\n"
+            "`!ban @user [reason]` - Ban a member\n"
+            "`!timeout @user <seconds>` - Timeout user\n"
+            "`!clear <count>` - Delete messages\n"
+            "`!mute @user <minutes>` - Mute member\n"
+            "`!warn @user <reason>` - Warn a user"
+        ),
+        inline=False
+    )
+    
+    # Economy Management
+    embed.add_field(
+        name="💎 **Economy Management**",
+        value=(
+            "`!givetadbucks @user <amount>` - Give Tadbucks\n"
+            "`!removetadbucks @user <amount>` - Remove Tadbucks\n"
+            "`!givetadzzypoints @user <amount>` - Give points\n"
+            "`!giveplayer @user <player>` - Give player card\n"
+            "`!resetbalance @user` - Reset user balance"
+        ),
+        inline=False
+    )
+    
+    # System Administration  
+    embed.add_field(
+        name="⚙️ **System Administration**",
+        value=(
+            "`!save` - Manually save data\n"
+            "`!load` - Reload data from disk\n"
+            "`!backup` - Create data backup\n"
+            "`!broadcast <message>` - Send to all members\n"
+            "`!say <message>` - Make bot speak"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(text="⚠️ Use admin commands responsibly!")
+    await ctx.send(embed=embed)
+
+# -----------------------------
+# Enhanced Shop System
+# -----------------------------
+@bot.command()
+async def shop(ctx: commands.Context, rarity: str = None):
+    """Browse the player shop with optional rarity filter"""
+    if rarity:
+        rarity = rarity.title()
+        available_cards = [f for f in footballers if f["rarity"] == rarity]
+        if not available_cards:
+            return await ctx.send(f"No players found with rarity '{rarity}'. Available rarities: Common, Epic, Legendary, Mythic, Expensive, Secret")
+    else:
+        available_cards = footballers
+    
+    # Sort by price for better organization
+    available_cards.sort(key=lambda x: x["price"], reverse=True)
+    
+    pages = []
+    per_page = 8
+    
+    for i in range(0, len(available_cards), per_page):
+        embed = discord.Embed(
+            title=f"🏪 Tadzzy Card Shop{f' - {rarity} Cards' if rarity else ''}",
+            description="Use `!buy <player>` to purchase a card!",
+            color=0x00ff00
+        )
+        
+        for card in available_cards[i:i+per_page]:
+            income_info = f"💰 {card.get('income_rate', 1)}/30min"
+            embed.add_field(
+                name=f"{card['name']} ({card['rarity']})",
+                value=f"Price: ${card['price']:,}\nIncome: {income_info}",
+                inline=True
+            )
+        
+        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(available_cards)-1)//per_page + 1} | Tip: Higher rarity = more income!")
+        pages.append(embed)
+    
+    await paged_embed_navigation(ctx, pages)
+
+@bot.command()
+async def buy(ctx: commands.Context, *, player_name: str):
+    """Purchase a player card from the shop"""
+    ensure_user_exists(ctx.author.id)
+    
+    card = find_player_card_by_name(player_name)
+    if not card:
+        return await ctx.send("❌ Player not found in shop. Use `!shop` to browse available players.")
+    
+    user_balance = get_balance(ctx.author.id)
+    card_price = card["price"]
+    
+    if user_balance < card_price:
+        return await ctx.send(f"❌ Insufficient funds! You have ${user_balance:,} but {card['name']} costs ${card_price:,}")
+    
+    # Check if user already owns this card
+    uid = str(ctx.author.id)
+    user_collection = data["user_collections"].get(uid, [])
+    if any(c["name"] == card["name"] for c in user_collection):
+        return await ctx.send(f"❌ You already own **{card['name']}**!")
+    
+    # Check collection space
+    if len(user_collection) >= MAX_COLLECTION_SLOTS:
+        return await ctx.send(f"❌ Your collection is full! ({MAX_COLLECTION_SLOTS}/{MAX_COLLECTION_SLOTS})")
+    
+    # Process purchase
+    set_balance(ctx.author.id, user_balance - card_price)
+    data["user_collections"][uid].append(card.copy())
+    
+    embed = discord.Embed(
+        title="🎉 Purchase Successful!",
+        description=f"You bought **{card['name']}** for ${card_price:,}!",
+        color=card["color"]
+    )
+    embed.add_field(name="Remaining Balance", value=f"${get_balance(ctx.author.id):,}", inline=True)
+    embed.add_field(name="Passive Income", value=f"💰 {card.get('income_rate', 1)} every 30 minutes", inline=True)
+    embed.add_field(name="Collection", value=f"{len(user_collection)+1}/{MAX_COLLECTION_SLOTS}", inline=True)
+    
+    await ctx.send(embed=embed)
+
+# -----------------------------
+# Enhanced Trading System
+# -----------------------------
+@bot.command()
+async def trade(ctx: commands.Context, target: discord.Member, card_index: int):
+    """Initiate a trade with another player"""
+    if ctx.author.id == target.id:
+        await ctx.send("❌ You cannot trade with yourself!")
+        return
+
+    ensure_user_exists(ctx.author.id)
+    ensure_user_exists(target.id)
+    
+    sender_coll = data["user_collections"].get(str(ctx.author.id), [])
+    target_coll = data["user_collections"].get(str(target.id), [])
+
+    if card_index < 1 or card_index > len(sender_coll):
+        await ctx.send(f"❌ Invalid card number. You have {len(sender_coll)} cards. Use `!collection` to see them.")
+        return
+
+    item_to_trade = sender_coll[card_index - 1]
+    trade_id = f"{ctx.author.id}_{target.id}_{int(datetime.utcnow().timestamp())}"
+    
+    # Store trade info
+    pending_trades[trade_id] = {
+        "sender": ctx.author.id,
+        "recipient": target.id,
+        "card": item_to_trade,
+        "card_index": card_index - 1,
+        "status": "pending",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    embed = discord.Embed(
+        title="🔄 Trade Offer",
+        description=f"{target.mention}, {ctx.author.mention} wants to trade with you!",
+        color=0xff9900
+    )
+    embed.add_field(
+        name="Offered Card",
+        value=f"**{item_to_trade['name']}** ({item_to_trade['rarity']})\nValue: ${item_to_trade['price']:,}\nIncome: 💰{item_to_trade.get('income_rate', 1)}/30min",
+        inline=False
+    )
+    embed.add_field(
+        name="How to Respond",
+        value=f"`!accepttrade {trade_id}` - Accept the trade\n`!declinetrade {trade_id}` - Decline the trade",
+        inline=False
+    )
+    embed.set_footer(text=f"Trade ID: {trade_id} | Expires in 5 minutes")
+
+    await ctx.send(embed=embed)
+    
+    # Auto-expire trade after 5 minutes
+    await asyncio.sleep(300)  # 5 minutes
+    if trade_id in pending_trades and pending_trades[trade_id]["status"] == "pending":
+        del pending_trades[trade_id]
+
+@bot.command()
+async def accepttrade(ctx: commands.Context, trade_id: str):
+    """Accept a trade offer"""
+    if trade_id not in pending_trades:
+        return await ctx.send("❌ Trade not found or expired.")
+    
+    trade = pending_trades[trade_id]
+    if trade["recipient"] != ctx.author.id:
+        return await ctx.send("❌ This trade is not for you.")
+    
+    if trade["status"] != "pending":
+        return await ctx.send("❌ This trade is no longer available.")
+    
+    sender_id = str(trade["sender"])
+    recipient_id = str(trade["recipient"])
+    
+    sender_coll = data["user_collections"].get(sender_id, [])
+    recipient_coll = data["user_collections"].get(recipient_id, [])
+    
+    # Check if recipient has space
+    if len(recipient_coll) >= MAX_COLLECTION_SLOTS:
+        await ctx.send("❌ Your collection is full! Cannot accept trade.")
+        del pending_trades[trade_id]
+        return
+    
+    # Check if sender still has the card
+    if trade["card_index"] >= len(sender_coll) or sender_coll[trade["card_index"]]["name"] != trade["card"]["name"]:
+        await ctx.send("❌ The sender no longer has this card.")
+        del pending_trades[trade_id]
+        return
+    
+    # Execute trade
+    card = sender_coll.pop(trade["card_index"])
+    recipient_coll.append(card)
+    
+    trade["status"] = "completed"
+    
+    embed = discord.Embed(
+        title="✅ Trade Completed!",
+        description=f"Trade between <@{sender_id}> and <@{recipient_id}> successful!",
+        color=0x00ff00
+    )
+    embed.add_field(
+        name="Traded Card",
+        value=f"**{card['name']}** ({card['rarity']})\nValue: ${card['price']:,}",
+        inline=False
+    )
+    
+    await ctx.send(embed=embed)
+    del pending_trades[trade_id]
+
+@bot.command()
+async def declinetrade(ctx: commands.Context, trade_id: str):
+    """Decline a trade offer"""
+    if trade_id not in pending_trades:
+        return await ctx.send("❌ Trade not found.")
+    
+    trade = pending_trades[trade_id]
+    if trade["recipient"] != ctx.author.id:
+        return await ctx.send("❌ This trade is not for you.")
+    
+    await ctx.send(f"❌ <@{ctx.author.id}> declined the trade offer.")
+    del pending_trades[trade_id]
+
+# -----------------------------
+# Enhanced Selling System  
+# -----------------------------
+@bot.command()
+async def sell(ctx: commands.Context, *, player_name: str):
+    """Sell a player card with dynamic pricing"""
+    uid = str(ctx.author.id)
+    ensure_user_exists(ctx.author.id)
+    coll = data["user_collections"].get(uid, [])
+    
+    # Find the card (case-insensitive)
+    card = next((c for c in coll if normalize_name(c["name"]) == normalize_name(player_name)), None)
+    if not card:
+        return await ctx.send("❌ You don't own this card. Use `!collection` to see your cards.")
+    
+    # Dynamic pricing based on rarity
+    base_price = card["price"]
+    rarity_multipliers = {
+        "Secret": 0.8,      # 80% of original price
+        "Mythic": 0.7,      # 70% of original price  
+        "Legendary": 0.6,   # 60% of original price
+        "Epic": 0.55,       # 55% of original price
+        "Expensive": 0.75,  # 75% of original price
+        "Common": 0.4       # 40% of original price
+    }
+    
+    multiplier = rarity_multipliers.get(card["rarity"], 0.5)
+    sell_price = int(base_price * multiplier)
+    
+    # Confirmation embed
+    embed = discord.Embed(
+        title="💸 Sell Confirmation",
+        description=f"Are you sure you want to sell **{card['name']}**?",
+        color=0xff9900
+    )
+    embed.add_field(name="Original Price", value=f"${base_price:,}", inline=True)
+    embed.add_field(name="Sell Price", value=f"${sell_price:,}", inline=True)
+    embed.add_field(name="Lost Income", value=f"💰{card.get('income_rate', 1)}/30min", inline=True)
+    embed.set_footer(text="React with ✅ to confirm or ❌ to cancel")
+    
+    msg = await ctx.send(embed=embed)
+    await msg.add_reaction("✅")
+    await msg.add_reaction("❌")
+    
+    def check(reaction, user):
+        return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) in ["✅", "❌"]
+    
+    try:
+        reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
+        
+        if str(reaction.emoji) == "✅":
+            # Process sale
+            coll.remove(card)
+            current_balance = get_balance(ctx.author.id)
+            set_balance(ctx.author.id, current_balance + sell_price)
+            
+            success_embed = discord.Embed(
+                title="✅ Sale Completed!",
+                description=f"You sold **{card['name']}** for ${sell_price:,}!",
+                color=0x00ff00
+            )
+            success_embed.add_field(name="New Balance", value=f"${get_balance(ctx.author.id):,}", inline=True)
+            success_embed.add_field(name="Cards Remaining", value=f"{len(coll)}/{MAX_COLLECTION_SLOTS}", inline=True)
+            
+            await msg.edit(embed=success_embed)
+            await msg.clear_reactions()
+            
+        else:
+            await msg.edit(content="❌ Sale cancelled.", embed=None)
+            await msg.clear_reactions()
+            
+    except asyncio.TimeoutError:
+        await msg.edit(content="⏰ Sale timed out.", embed=None)
+        await msg.clear_reactions()
 
 # -----------------------------
 # Moderation commands
@@ -502,22 +896,6 @@ async def nick(ctx: commands.Context, member: discord.Member, *, newname: str):
 # -----------------------------
 # Admin commands
 # -----------------------------
-@commands.has_permissions(administrator=True)
-@bot.command()
-async def adminhelp(ctx: commands.Context):
-    e = discord.Embed(title="Admin Commands", color=0xff0000)
-    e.add_field(name="Economy & Collections", value=(
-        "`!givetadzzypoints <user> <amount>`, `!removetadzzypoints <user> <amount>`\n"
-        "`!givetadbucks <user> <amount>`, `!removetadbucks <user> <amount>`\n"
-        "`!giveplayer <user> <player>`, `!removeplayer <user> <player>`\n"
-        "`!addlevel <user> <amount>`, `!removelevel <user> <amount>`"
-    ), inline=False)
-    e.add_field(name="Management", value=(
-        "`!resetbalance <user>`, `!say`, `!forcecloseauction <player>`, `!broadcast <message>`\n"
-        "`!save`, `!load`, `!backup`"
-    ), inline=False)
-    await ctx.send(embed=e)
-
 @commands.has_permissions(administrator=True)
 @bot.command()
 async def givetadzzypoints(ctx: commands.Context, member: discord.Member, amount: int):
@@ -854,17 +1232,26 @@ async def giveawaycreate(ctx: commands.Context, time: int, *, prize: str):
 async def checkbalance(ctx: commands.Context):
     ensure_user_exists(ctx.author.id)
     bal = get_balance(ctx.author.id)
-    await ctx.send(f"{ctx.author.mention}, your balance is ${bal}")
+    await ctx.send(f"💰 {ctx.author.mention}, your balance is **${bal:,} Tadbucks**")
 
 @bot.command(name="Tadbucks")
 async def tadbucks_help(ctx: commands.Context):
-    embed = discord.Embed(title="💵 Tadbucks Commands", color=0xf1c40f)
-    embed.add_field(name="Economy", value=(
-        "`!gamble <amount>` 70/30 chance, 24h cooldown\n"
-        "`!fairgamble <amount>` 50/50, level 50+\n"
-        "`!spawnauction <player>`, `!bid <player> <amount>`, `!closeauction <player>`\n"
-        "`!sell <player>` sell for 50%\n"
-        "`!collection`, `!allplayers`, `!checkbalance`, `!leaderboard`, `!points_leaderboard`"
+    embed = discord.Embed(title="💵 Tadbucks System", description="Your guide to the Tadbucks economy!", color=0xf1c40f)
+    embed.add_field(name="💰 Earning", value=(
+        "• Message XP: Gain XP and level up rewards\n"
+        "• Passive Income: Cards generate money every 30min\n"
+        "• Gambling: Risk your Tadbucks for potential gains\n"
+        "• Trading: Exchange cards with other players"
+    ), inline=False)
+    embed.add_field(name="🛒 Spending", value=(
+        "• `!shop` - Buy player cards from the shop\n"
+        "• `!gamble <amount>` - Gamble your Tadbucks\n"
+        "• `!bid <player> <amount>` - Bid in auctions"
+    ), inline=False)
+    embed.add_field(name="📊 Tracking", value=(
+        "• `!checkbalance` - View your current balance\n"
+        "• `!collection` - See your owned cards\n"
+        "• `!leaderboard` - Top Tadbucks players"
     ), inline=False)
     await ctx.send(embed=embed)
 
@@ -887,10 +1274,10 @@ async def gamble(ctx: commands.Context, amount: int):
     gamble_cooldowns[uid] = now.isoformat()
     if random.random() < 0.3:
         set_balance(ctx.author.id, balance + amount)
-        await ctx.send(f"🎉 You won! You gained ${amount}. New balance: ${get_balance(ctx.author.id)}")
+        await ctx.send(f"🎉 You won! You gained ${amount:,}. New balance: ${get_balance(ctx.author.id):,}")
     else:
         set_balance(ctx.author.id, balance - amount)
-        await ctx.send(f"💸 You lost ${amount}. New balance: ${get_balance(ctx.author.id)}")
+        await ctx.send(f"💸 You lost ${amount:,}. New balance: ${get_balance(ctx.author.id):,}")
 
 @bot.command()
 async def fairgamble(ctx: commands.Context, amount: int):
@@ -906,10 +1293,10 @@ async def fairgamble(ctx: commands.Context, amount: int):
         return await ctx.send("You need to be at least level 50 for fair gamble.")
     if random.random() < 0.5:
         set_balance(ctx.author.id, balance + amount)
-        await ctx.send(f"🎉 50/50! You won ${amount}. New balance: ${get_balance(ctx.author.id)}")
+        await ctx.send(f"🎉 50/50! You won ${amount:,}. New balance: ${get_balance(ctx.author.id):,}")
     else:
         set_balance(ctx.author.id, balance - amount)
-        await ctx.send(f"💸 50/50! You lost ${amount}. New balance: ${get_balance(ctx.author.id)}")
+        await ctx.send(f"💸 50/50! You lost ${amount:,}. New balance: ${get_balance(ctx.author.id):,}")
 
 @bot.command()
 async def spawnauction(ctx: commands.Context, *, player_name: str):
@@ -954,7 +1341,7 @@ async def bid(ctx: commands.Context, player_name: str, amount: int):
     auction["highest_bidder"] = str(ctx.author.id)
     new_end = max(ends_at, datetime.utcnow() + timedelta(minutes=5))
     auction["ends_at"] = new_end.isoformat()
-    await ctx.send(f"{ctx.author.mention} is now the highest bidder for {name} with ${amount}!")
+    await ctx.send(f"{ctx.author.mention} is now the highest bidder for {name} with ${amount:,}!")
 
 @commands.has_permissions(administrator=True)
 @bot.command()
@@ -982,20 +1369,7 @@ async def closeauction(ctx: commands.Context, *, player_name: str):
         return await ctx.send("Winner has full collection, cannot add player.")
     user_coll.append(card)
     auction["active"] = False
-    await ctx.send(f"🎉 <@{winner_id}> won the auction for {name} with ${amount}!")
-
-@bot.command()
-async def sell(ctx: commands.Context, *, player_name: str):
-    uid = str(ctx.author.id)
-    ensure_user_exists(ctx.author.id)
-    coll = data["user_collections"].get(uid, [])
-    card = next((c for c in coll if normalize_name(c["name"]) == normalize_name(player_name)), None)
-    if not card:
-        return await ctx.send("You don't own this card.")
-    coll.remove(card)
-    sell_price = int(card["price"]) // 2
-    data["tadbucks_balances"][uid] = int(data["tadbucks_balances"].get(uid, STARTING_BALANCE)) + sell_price
-    await ctx.send(f"You sold {card['name']} for ${sell_price}. New balance: ${get_balance(ctx.author.id)}")
+    await ctx.send(f"🎉 <@{winner_id}> won the auction for {name} with ${amount:,}!")
 
 # -----------------------------
 # Collection & Allplayers with paging
@@ -1044,14 +1418,27 @@ async def collection(ctx: commands.Context):
     ensure_user_exists(ctx.author.id)
     coll = data["user_collections"].get(uid, [])
     if not coll:
-        return await ctx.send("Your collection is empty.")
+        return await ctx.send("Your collection is empty. Use `!shop` to buy some cards!")
+    
+    # Sort by rarity and price for better display
+    rarity_order = {"Secret": 0, "Expensive": 1, "Mythic": 2, "Legendary": 3, "Epic": 4, "Common": 5}
+    coll.sort(key=lambda x: (rarity_order.get(x["rarity"], 6), -x["price"]))
+    
     pages = []
     per_page = 6
     for i in range(0, len(coll), per_page):
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s Collection", color=0x5865F2)
-        for card in coll[i:i+per_page]:
-            embed.add_field(name=card["name"], value=f"Rarity: {card['rarity']} | Price: ${card['price']}", inline=False)
-        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(coll)-1)//per_page + 1}")
+        embed = discord.Embed(
+            title=f"🎴 {ctx.author.display_name}'s Collection", 
+            description=f"Total Cards: {len(coll)}/{MAX_COLLECTION_SLOTS}",
+            color=0x5865F2
+        )
+        for idx, card in enumerate(coll[i:i+per_page], i+1):
+            embed.add_field(
+                name=f"{idx}. {card['name']} ({card['rarity']})",
+                value=f"💰 Value: ${card['price']:,}\n📈 Income: {card.get('income_rate', 1)}/30min",
+                inline=True
+            )
+        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(coll)-1)//per_page + 1} | Use card numbers for trading!")
         pages.append(embed)
     await paged_embed_navigation(ctx, pages)
 
@@ -1059,11 +1446,19 @@ async def collection(ctx: commands.Context):
 async def allplayers(ctx: commands.Context):
     pages = []
     per_page = 8
-    for i in range(0, len(footballers), per_page):
-        embed = discord.Embed(title="All Footballers", color=0x5865F2)
-        for card in footballers[i:i+per_page]:
-            embed.add_field(name=card["name"], value=f"Rarity: {card['rarity']} | Price: ${card['price']}", inline=False)
-        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(footballers)-1)//per_page + 1}")
+    
+    # Sort players by rarity and price
+    sorted_players = sorted(footballers, key=lambda x: (x["price"]), reverse=True)
+    
+    for i in range(0, len(sorted_players), per_page):
+        embed = discord.Embed(title="🏪 All Available Players", color=0x5865F2)
+        for card in sorted_players[i:i+per_page]:
+            embed.add_field(
+                name=f"{card['name']} ({card['rarity']})",
+                value=f"💰 Price: ${card['price']:,}\n📈 Income: {card.get('income_rate', 1)}/30min",
+                inline=True
+            )
+        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(sorted_players)-1)//per_page + 1} | Use !shop to buy!")
         pages.append(embed)
     await paged_embed_navigation(ctx, pages)
 
@@ -1073,53 +1468,109 @@ async def allplayers(ctx: commands.Context):
 @bot.command()
 async def leaderboard(ctx: commands.Context):
     items = sorted(data["tadbucks_balances"].items(), key=lambda x: int(x[1]), reverse=True)[:10]
-    embed = discord.Embed(title="💰 Tadbucks Leaderboard", color=0xf1c40f)
-    for uid, bal in items:
+    embed = discord.Embed(title="💰 Tadbucks Leaderboard", description="Top 10 richest players", color=0xf1c40f)
+    for i, (uid, bal) in enumerate(items, 1):
         try:
             user = await bot.fetch_user(int(uid))
-            embed.add_field(name=user.name if user else uid, value=f"${bal}", inline=False)
+            name = user.name if user else f"User {uid}"
         except Exception:
-            embed.add_field(name=str(uid), value=f"${bal}", inline=False)
+            name = f"User {uid}"
+        
+        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+        embed.add_field(
+            name=f"{medal} {name}",
+            value=f"${int(bal):,}",
+            inline=False
+        )
     await ctx.send(embed=embed)
 
 @bot.command()
 async def points_leaderboard(ctx: commands.Context):
     items = sorted(data["tadzzy_points"].items(), key=lambda x: int(x[1]), reverse=True)[:10]
-    embed = discord.Embed(title="🏆 Tadzzy Points Leaderboard", color=0x00ff00)
-    for uid, pts in items:
+    embed = discord.Embed(title="🏆 Tadzzy Points Leaderboard", description="Top 10 point holders", color=0x00ff00)
+    for i, (uid, pts) in enumerate(items, 1):
         try:
             user = await bot.fetch_user(int(uid))
-            embed.add_field(name=user.name if user else uid, value=f"{pts} pts", inline=False)
+            name = user.name if user else f"User {uid}"
         except Exception:
-            embed.add_field(name=str(uid), value=f"{pts} pts", inline=False)
+            name = f"User {uid}"
+            
+        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+        embed.add_field(
+            name=f"{medal} {name}",
+            value=f"{int(pts):,} pts",
+            inline=False
+        )
     await ctx.send(embed=embed)
 
 @bot.command()
 async def collection_status(ctx: commands.Context, member: Optional[discord.Member] = None):
     member = member or ctx.author
     coll = data["user_collections"].get(str(member.id), [])
-    await ctx.send(f"{member.display_name} has {len(coll)}/{MAX_COLLECTION_SLOTS} cards.")
+    await ctx.send(f"📊 {member.display_name} has **{len(coll)}/{MAX_COLLECTION_SLOTS}** cards.")
 
 # -----------------------------
-# Passive Income Commands
+# Enhanced Passive Income Commands
 # -----------------------------
 @bot.command()
 async def passiveincome(ctx):
     user_id = str(ctx.author.id)
     if user_id not in last_income_report:
-        await ctx.send(f"{ctx.author.mention}, you haven't received a passive income payout yet. Wait for the next 30-minute cycle!")
+        await ctx.send(f"💸 {ctx.author.mention}, you haven't received a passive income payout yet!\nCards generate income every **30 minutes** based on their rarity and value.")
     else:
         payout = last_income_report[user_id]
-        await ctx.send(f"{ctx.author.mention}, your most recent passive income payout was **{payout:,} Tadbucks** 💸")
+        embed = discord.Embed(
+            title="💰 Latest Passive Income Report", 
+            color=0x00ff00
+        )
+        embed.add_field(
+            name="Last Payout", 
+            value=f"**${payout:,} Tadbucks** 💸", 
+            inline=True
+        )
+        embed.add_field(
+            name="Next Payout", 
+            value="⏰ Within 30 minutes", 
+            inline=True
+        )
+        embed.set_footer(text="💡 Tip: Rarer cards generate more income!")
+        await ctx.send(embed=embed)
 
 @bot.command()
 async def income(ctx, arg: str = None):
     user_id = str(ctx.author.id)
     if arg and arg.lower() == "total":
         total = total_income_tracker.get(user_id, 0)
-        await ctx.send(f"{ctx.author.mention}, you've earned a total of **{total:,} Tadbucks** from passive income 💰")
+        
+        embed = discord.Embed(
+            title="📊 Total Income Report",
+            description=f"{ctx.author.mention}'s lifetime earnings",
+            color=0xf1c40f
+        )
+        embed.add_field(
+            name="Total Passive Income Earned",
+            value=f"**${total:,} Tadbucks** 💰",
+            inline=False
+        )
+        
+        # Calculate potential income from current collection
+        coll = data["user_collections"].get(user_id, [])
+        potential_income = sum(card.get("income_rate", 1) for card in coll)
+        
+        embed.add_field(
+            name="Current Collection Income Rate",
+            value=f"**${potential_income:,}** every 30 minutes",
+            inline=True
+        )
+        embed.add_field(
+            name="Cards Owned",
+            value=f"{len(coll)}/{MAX_COLLECTION_SLOTS}",
+            inline=True
+        )
+        
+        await ctx.send(embed=embed)
     else:
-        await ctx.send(f"{ctx.author.mention}, usage: `!income total`")
+        await ctx.send(f"📈 {ctx.author.mention}, use `!income total` to see your total lifetime earnings from passive income!")
 
 @bot.command()
 async def messagesleft(ctx):
@@ -1129,50 +1580,28 @@ async def messagesleft(ctx):
     current_level = current_xp // LEVEL_UP_XP_THRESHOLD
     xp_in_current_level = current_xp % LEVEL_UP_XP_THRESHOLD
     xp_remaining = LEVEL_UP_XP_THRESHOLD - xp_in_current_level
-    await ctx.send(f"📊 {ctx.author.mention}, you need **{xp_remaining} XP** more to reach level {current_level + 1}!")
-
-# -----------------------------
-# Trading System
-# -----------------------------
-@bot.command()
-async def trade(ctx, target: discord.Member, item_index: int):
-    if ctx.author.id == target.id:
-        await ctx.send("You cannot trade with yourself!")
-        return
-
-    ensure_user_exists(ctx.author.id)
-    ensure_user_exists(target.id)
     
-    sender_coll = data["user_collections"].get(str(ctx.author.id), [])
-    target_coll = data["user_collections"].get(str(target.id), [])
-
-    if item_index < 0 or item_index >= len(sender_coll):
-        await ctx.send("Invalid item index.")
-        return
-
-    item_to_trade = sender_coll[item_index]
-
-    await ctx.send(f"{target.mention}, {ctx.author} wants to trade **{item_to_trade['name']}** with you. Type `accept` or `decline`.")
-
-    def check(m):
-        return m.author == target and m.content.lower() in ["accept", "decline"]
-
-    try:
-        msg = await bot.wait_for("message", check=check, timeout=60)
-    except asyncio.TimeoutError:
-        await ctx.send("Trade request timed out.")
-        return
-
-    if msg.content.lower() == "accept":
-        if len(target_coll) >= MAX_COLLECTION_SLOTS:
-            await ctx.send("Target user's collection is full!")
-            return
-        
-        sender_coll.pop(item_index)
-        target_coll.append(item_to_trade)
-        await ctx.send("Trade completed successfully!")
-    else:
-        await ctx.send("Trade declined.")
+    embed = discord.Embed(
+        title="📊 Level Progress", 
+        color=0x9932cc
+    )
+    embed.add_field(
+        name="Current Level", 
+        value=f"**{current_level}**", 
+        inline=True
+    )
+    embed.add_field(
+        name="XP to Next Level", 
+        value=f"**{xp_remaining}** messages", 
+        inline=True
+    )
+    embed.add_field(
+        name="Level Up Rewards", 
+        value=f"💰 ${LEVEL_REWARD_TADBUCKS:,}\n🏆 {LEVEL_REWARD_TADZZY} Points", 
+        inline=True
+    )
+    
+    await ctx.send(embed=embed)
 
 # -----------------------------
 # Error handling
@@ -1180,11 +1609,11 @@ async def trade(ctx, target: discord.Member, item_index: int):
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingPermissions):
-        return await ctx.send("You don't have the required permissions to run this command.")
+        return await ctx.send("❌ You don't have the required permissions to run this command.")
     if isinstance(error, commands.MissingRequiredArgument):
-        return await ctx.send("Missing required argument. Check the command usage.")
+        return await ctx.send("❌ Missing required argument. Check the command usage.")
     if isinstance(error, commands.BadArgument):
-        return await ctx.send("Bad argument. Please check your inputs.")
+        return await ctx.send("❌ Bad argument. Please check your inputs.")
     print("Unhandled command error:", error)
     await ctx.send(f"An error occurred: {error}")
 
