@@ -404,7 +404,7 @@ async def on_message(message: discord.Message):
 @bot.command(name="help")
 async def help_command(ctx: commands.Context):
     embed = discord.Embed(
-        title="🤖 Tadzzy Bot — Command Center", 
+        title="🎮 Tadzzy Bot — Command Center", 
         description="Your ultimate Discord bot companion! Use `!` prefix for all commands.",
         color=0x5865F2
     )
@@ -413,7 +413,7 @@ async def help_command(ctx: commands.Context):
     embed.add_field(
         name="💰 **Economy & Shop**",
         value=(
-            "`!shop` - Browse the player shop\n"
+            "`!shop [rarity]` - Browse the player shop\n"
             "`!buy <player>` - Purchase a player card\n"
             "`!sell <player>` - Sell your player card\n"
             "`!checkbalance` - View your Tadbucks\n"
@@ -429,9 +429,9 @@ async def help_command(ctx: commands.Context):
         value=(
             "`!trade @user <card_index>` - Trade with another player\n"
             "`!accepttrade <trade_id>` - Accept a trade offer\n"
+            "`!declinetrade <trade_id>` - Decline a trade offer\n"
             "`!spawnauction <player>` - Start an auction\n"
-            "`!bid <player> <amount>` - Bid on auctions\n"
-            "`!closeauction <player>` - Close auction (admin)"
+            "`!bid <player> <amount>` - Bid on auctions"
         ),
         inline=False
     )
@@ -441,22 +441,45 @@ async def help_command(ctx: commands.Context):
         name="📈 **Income & Progress**",
         value=(
             "`!passiveincome` - Check last income payout\n"
-            "`!income total` - View total earnings\n"
+            "`!income total` - View total lifetime earnings\n"
             "`!messagesleft` - XP needed for next level\n"
             "`!points_leaderboard` - Top Tadzzy Points"
         ),
         inline=False
     )
     
-    # Games & Fun Section
+    # Gambling & Risk Section
     embed.add_field(
-        name="🎮 **Games & Fun**",
+        name="🎰 **Gambling & Risk**",
         value=(
-            "`!gamble <amount>` - Risk it all! (24h cooldown)\n"
-            "`!fairgamble <amount>` - 50/50 bet (level 50+)\n"
-            "`!guesstheplayer[easy/hard/extreme]` - Trivia games\n"
-            "`!rps <choice>` - Rock Paper Scissors\n"
-            "`!coinflip` - Flip a coin"
+            "`!gamble <amount>` - 30% win chance, 24h cooldown\n"
+            "`!fairgamble <amount>` - 50/50 bet, level 50+ required"
+        ),
+        inline=False
+    )
+    
+    # Fun & Games Section - NOW WITH ALL COMMANDS!
+    embed.add_field(
+        name="🎲 **Fun & Games**",
+        value=(
+            "`!rps <rock|paper|scissors>` - Rock Paper Scissors\n"
+            "`!coinflip` - Flip a coin | `!dice <sides>` - Roll dice\n"
+            "`!8ball <question>` - Magic 8-ball fortune telling\n"
+            "`!var` - Football VAR decision simulator\n"
+            "`!meme` - Random memes | `!dadjoke` - Dad jokes\n"
+            "`!compliment [@user]` - Spread positivity | `!trivia` - Quiz time"
+        ),
+        inline=False
+    )
+    
+    # Player Guessing Games
+    embed.add_field(
+        name="⚽ **Guess The Player**",
+        value=(
+            "`!guesstheplayereasy` - Easy difficulty\n"
+            "`!guesstheplayer` - Normal difficulty\n"
+            "`!guesstheplayerhard` - Hard difficulty\n"
+            "`!guesstheplayerextreme` - Extreme difficulty"
         ),
         inline=False
     )
@@ -501,7 +524,10 @@ async def adminhelp(ctx: commands.Context):
             "`!timeout @user <seconds>` - Timeout user\n"
             "`!clear <count>` - Delete messages\n"
             "`!mute @user <minutes>` - Mute member\n"
-            "`!warn @user <reason>` - Warn a user"
+            "`!unmute @user` - Unmute member\n"
+            "`!warn @user <reason>` - Warn a user\n"
+            "`!slowmode <seconds>` - Set channel slowmode\n"
+            "`!nick @user <name>` - Change nickname"
         ),
         inline=False
     )
@@ -512,9 +538,25 @@ async def adminhelp(ctx: commands.Context):
         value=(
             "`!givetadbucks @user <amount>` - Give Tadbucks\n"
             "`!removetadbucks @user <amount>` - Remove Tadbucks\n"
-            "`!givetadzzypoints @user <amount>` - Give points\n"
+            "`!givetadzzypoints @user <amount>` - Give Tadzzy Points\n"
+            "`!removetadzzypoints @user <amount>` - Remove points\n"
             "`!giveplayer @user <player>` - Give player card\n"
-            "`!resetbalance @user` - Reset user balance"
+            "`!removeplayer @user <player>` - Remove player card\n"
+            "`!resetbalance @user` - Reset user balance\n"
+            "`!addlevel @user <amount>` - Add XP levels\n"
+            "`!removelevel @user <amount>` - Remove XP levels"
+        ),
+        inline=False
+    )
+    
+    # Auction & Event Management
+    embed.add_field(
+        name="🏆 **Auction & Events**",
+        value=(
+            "`!forcecloseauction <player>` - Force close auction\n"
+            "`!addgamenight <link>` - Add Roblox game night\n"
+            "`!gamenightremove <link>` - Remove game night\n"
+            "`!giveawaycreate <time> <prize>` - Create giveaway"
         ),
         inline=False
     )
@@ -1078,7 +1120,10 @@ async def compliment(ctx: commands.Context, member: Optional[discord.Member] = N
     compliments = [
         "You're an awesome friend!",
         "Your positivity is infectious.",
-        "You light up the room!"
+        "You light up the room!",
+        "You have great taste in Discord bots!",
+        "You're absolutely fantastic!",
+        "Keep being amazing!"
     ]
     await ctx.send(f"{member.mention}, {random.choice(compliments)}")
 
@@ -1087,10 +1132,12 @@ async def trivia(ctx: commands.Context):
     questions = [
         ("What is the capital of France?", "paris"),
         ("Which planet is known as the Red Planet?", "mars"),
-        ("What programming language is this bot written in?", "python")
+        ("What programming language is this bot written in?", "python"),
+        ("Who won the 2022 FIFA World Cup?", "argentina"),
+        ("What is the largest ocean on Earth?", "pacific")
     ]
     q, a = random.choice(questions)
-    await ctx.send(q)
+    await ctx.send(f"🧠 **Trivia Time!** {q}")
 
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
@@ -1098,26 +1145,35 @@ async def trivia(ctx: commands.Context):
     try:
         reply = await bot.wait_for("message", check=check, timeout=20.0)
         if reply.content.lower().strip() == a:
-            await ctx.send("✅ Correct!")
+            await ctx.send("✅ Correct! Well done! 🎉")
         else:
-            await ctx.send(f"❌ Wrong — the answer was **{a}**.")
+            await ctx.send(f"❌ Wrong — the answer was **{a.title()}**.")
     except asyncio.TimeoutError:
-        await ctx.send(f"⏳ Time's up! The answer was **{a}**.")
+        await ctx.send(f"⏳ Time's up! The answer was **{a.title()}**.")
 
 @bot.command()
 async def dadjoke(ctx: commands.Context):
     jokes = [
         "I would tell you a construction pun, but I'm still working on it.",
         "Why don't skeletons fight each other? They don't have the guts.",
-        "I used to play piano by ear, but now I use my hands."
+        "I used to play piano by ear, but now I use my hands.",
+        "Why don't scientists trust atoms? Because they make up everything!",
+        "I'm reading a book about anti-gravity. It's impossible to put down!",
+        "Why did the scarecrow win an award? He was outstanding in his field!",
+        "What do you call a fake noodle? An impasta!",
+        "How do you organize a space party? You planet!"
     ]
-    await ctx.send(random.choice(jokes))
+    await ctx.send(f"👨 **Dad Joke:** {random.choice(jokes)}")
 
 @bot.command(name="8ball")
 async def eight_ball(ctx: commands.Context, *, question: str):
     answers = [
         "It is certain.", "Without a doubt.", "Ask again later.", "My reply is no.",
-        "Very doubtful.", "Signs point to yes.", "Better not tell you now."
+        "Very doubtful.", "Signs point to yes.", "Better not tell you now.",
+        "Yes definitely.", "Outlook not so good.", "Most likely.",
+        "Cannot predict now.", "Reply hazy, try again.", "Don't count on it.",
+        "Yes.", "My sources say no.", "Outlook good.",
+        "Concentrate and ask again.", "Very doubtful.", "As I see it, yes."
     ]
     await ctx.send(f"🎱 {random.choice(answers)}")
 
@@ -1140,11 +1196,15 @@ async def var(ctx):
         "Red card 🚩 – Off you go!",
         "Yellow card 🟨 – Behave yourself!",
         "Warning ⚠️ – You got lucky this time.",
-        "VAR is broken, play on! 😂"
+        "VAR is broken, play on! 😂",
+        "Penalty! 🥅 Clear contact in the box!",
+        "No penalty! ❌ Simulation detected!",
+        "Offside! 🚩 Player was clearly ahead.",
+        "Goal stands! ✅ No infringement found."
     ]
-    weights = [0.3, 0.3, 0.3, 0.1]
+    weights = [0.15, 0.25, 0.25, 0.1, 0.1, 0.05, 0.05, 0.05]
     choice = random.choices(punishments, weights=weights, k=1)[0]
-    await ctx.send(f"VAR Decision: {choice}")
+    await ctx.send(f"📺 **VAR Decision:** {choice}")
 
 # -----------------------------
 # Game Night System
@@ -1170,7 +1230,7 @@ async def gamenightremove(ctx: commands.Context, link: str):
 async def gamenight(ctx: commands.Context):
     if not data["gamenights"]:
         return await ctx.send("No gamenights added.")
-    embed = discord.Embed(title="Game Nights", color=0x2ecc71)
+    embed = discord.Embed(title="🎮 Game Nights", color=0x2ecc71)
     for i, g in enumerate(data["gamenights"], 1):
         embed.add_field(name=f"Game {i}", value=g, inline=False)
     await ctx.send(embed=embed)
@@ -1184,7 +1244,7 @@ async def start_guess(ctx: commands.Context, difficulty: str):
         return await ctx.send("No clues for that difficulty.")
     q, a = random.choice(db[difficulty])
     active_guess_games[str(ctx.author.id)] = {"difficulty": difficulty, "answer": a}
-    await ctx.send(f"⚽ Guess the player! Clue: {q}")
+    await ctx.send(f"⚽ **Guess the player!** {q}")
 
 @bot.command()
 async def guesstheplayereasy(ctx: commands.Context):
@@ -1209,6 +1269,7 @@ async def guesstheplayerextreme(ctx: commands.Context):
 @bot.command()
 async def giveawaycreate(ctx: commands.Context, time: int, *, prize: str):
     embed = discord.Embed(title="🎉 Giveaway! 🎉", description=f"Prize: **{prize}**\nReact with 🎉 to enter!", color=0xf1c40f)
+    embed.set_footer(text=f"Ends in {time} seconds")
     msg = await ctx.send(embed=embed)
     await msg.add_reaction("🎉")
     await asyncio.sleep(time)
@@ -1221,7 +1282,7 @@ async def giveawaycreate(ctx: commands.Context, time: int, *, prize: str):
                     entries.append(u)
             break
     if not entries:
-        return await ctx.send("❌ Nobody entered.")
+        return await ctx.send("❌ Nobody entered the giveaway.")
     winner = random.choice(entries)
     await ctx.send(f"🎊 Congratulations {winner.mention}, you won **{prize}**!")
 
@@ -1232,26 +1293,26 @@ async def giveawaycreate(ctx: commands.Context, time: int, *, prize: str):
 async def checkbalance(ctx: commands.Context):
     ensure_user_exists(ctx.author.id)
     bal = get_balance(ctx.author.id)
-    await ctx.send(f"💰 {ctx.author.mention}, your balance is **${bal:,} Tadbucks**")
+    await ctx.send(f"💰 {ctx.author.mention}, your balance is **${bal:,}** Tadbucks")
 
 @bot.command(name="Tadbucks")
 async def tadbucks_help(ctx: commands.Context):
-    embed = discord.Embed(title="💵 Tadbucks System", description="Your guide to the Tadbucks economy!", color=0xf1c40f)
-    embed.add_field(name="💰 Earning", value=(
-        "• Message XP: Gain XP and level up rewards\n"
-        "• Passive Income: Cards generate money every 30min\n"
-        "• Gambling: Risk your Tadbucks for potential gains\n"
-        "• Trading: Exchange cards with other players"
+    embed = discord.Embed(title="💵 Tadbucks Economy Guide", color=0xf1c40f)
+    embed.add_field(name="💰 Earning Tadbucks", value=(
+        "`!gamble <amount>` - 30% win chance, 24h cooldown\n"
+        "`!fairgamble <amount>` - 50/50 chance, level 50+\n"
+        "Passive Income - Cards generate money every 30 minutes\n"
+        "Level Up Rewards - Earn $5,000 per level"
     ), inline=False)
-    embed.add_field(name="🛒 Spending", value=(
-        "• `!shop` - Buy player cards from the shop\n"
-        "• `!gamble <amount>` - Gamble your Tadbucks\n"
-        "• `!bid <player> <amount>` - Bid in auctions"
+    embed.add_field(name="🛒 Spending Tadbucks", value=(
+        "`!shop [rarity]` - Buy player cards\n"
+        "`!spawnauction <player>` - Start auctions\n" 
+        "`!bid <player> <amount>` - Bid on auctions"
     ), inline=False)
-    embed.add_field(name="📊 Tracking", value=(
-        "• `!checkbalance` - View your current balance\n"
-        "• `!collection` - See your owned cards\n"
-        "• `!leaderboard` - Top Tadbucks players"
+    embed.add_field(name="💸 Selling", value=(
+        "`!sell <player>` - Sell cards for Tadbucks\n"
+        "Secret: 80% | Mythic: 70% | Legendary: 60%\n"
+        "Epic: 55% | Expensive: 75% | Common: 40%"
     ), inline=False)
     await ctx.send(embed=embed)
 
@@ -1270,7 +1331,7 @@ async def gamble(ctx: commands.Context, amount: int):
         last_dt = datetime.fromisoformat(last)
         if now - last_dt < timedelta(hours=24):
             remaining = timedelta(hours=24) - (now - last_dt)
-            return await ctx.send(f"You can gamble again in {str(remaining).split('.')[0]}.")
+            return await ctx.send(f"⏰ You can gamble again in {str(remaining).split('.')[0]}.")
     gamble_cooldowns[uid] = now.isoformat()
     if random.random() < 0.3:
         set_balance(ctx.author.id, balance + amount)
@@ -1290,7 +1351,7 @@ async def fairgamble(ctx: commands.Context, amount: int):
         return await ctx.send("You don't have enough Tadbucks.")
     level = int(data["xp_levels"].get(uid, 0))
     if level < 50:
-        return await ctx.send("You need to be at least level 50 for fair gamble.")
+        return await ctx.send(f"You need to be at least level 50 for fair gamble. You're level {level//LEVEL_UP_XP_THRESHOLD}.")
     if random.random() < 0.5:
         set_balance(ctx.author.id, balance + amount)
         await ctx.send(f"🎉 50/50! You won ${amount:,}. New balance: ${get_balance(ctx.author.id):,}")
@@ -1341,7 +1402,7 @@ async def bid(ctx: commands.Context, player_name: str, amount: int):
     auction["highest_bidder"] = str(ctx.author.id)
     new_end = max(ends_at, datetime.utcnow() + timedelta(minutes=5))
     auction["ends_at"] = new_end.isoformat()
-    await ctx.send(f"{ctx.author.mention} is now the highest bidder for {name} with ${amount:,}!")
+    await ctx.send(f"🔥 {ctx.author.mention} is now the highest bidder for {name} with ${amount:,}!")
 
 @commands.has_permissions(administrator=True)
 @bot.command()
@@ -1418,27 +1479,23 @@ async def collection(ctx: commands.Context):
     ensure_user_exists(ctx.author.id)
     coll = data["user_collections"].get(uid, [])
     if not coll:
-        return await ctx.send("Your collection is empty. Use `!shop` to buy some cards!")
-    
-    # Sort by rarity and price for better display
-    rarity_order = {"Secret": 0, "Expensive": 1, "Mythic": 2, "Legendary": 3, "Epic": 4, "Common": 5}
-    coll.sort(key=lambda x: (rarity_order.get(x["rarity"], 6), -x["price"]))
-    
+        return await ctx.send("📦 Your collection is empty. Use `!shop` to buy player cards!")
     pages = []
     per_page = 6
     for i in range(0, len(coll), per_page):
         embed = discord.Embed(
-            title=f"🎴 {ctx.author.display_name}'s Collection", 
-            description=f"Total Cards: {len(coll)}/{MAX_COLLECTION_SLOTS}",
+            title=f"📦 {ctx.author.display_name}'s Collection", 
+            description=f"Collection: {len(coll)}/{MAX_COLLECTION_SLOTS} cards",
             color=0x5865F2
         )
-        for idx, card in enumerate(coll[i:i+per_page], i+1):
+        for j, card in enumerate(coll[i:i+per_page], start=i+1):
+            income_rate = card.get('income_rate', 1)
             embed.add_field(
-                name=f"{idx}. {card['name']} ({card['rarity']})",
-                value=f"💰 Value: ${card['price']:,}\n📈 Income: {card.get('income_rate', 1)}/30min",
-                inline=True
+                name=f"{j}. {card['name']} ({card['rarity']})",
+                value=f"💰 ${card['price']:,} | 🕐 {income_rate}/30min",
+                inline=False
             )
-        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(coll)-1)//per_page + 1} | Use card numbers for trading!")
+        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(coll)-1)//per_page + 1} | Use card numbers for trading")
         pages.append(embed)
     await paged_embed_navigation(ctx, pages)
 
@@ -1446,19 +1503,16 @@ async def collection(ctx: commands.Context):
 async def allplayers(ctx: commands.Context):
     pages = []
     per_page = 8
-    
-    # Sort players by rarity and price
-    sorted_players = sorted(footballers, key=lambda x: (x["price"]), reverse=True)
-    
-    for i in range(0, len(sorted_players), per_page):
-        embed = discord.Embed(title="🏪 All Available Players", color=0x5865F2)
-        for card in sorted_players[i:i+per_page]:
+    for i in range(0, len(footballers), per_page):
+        embed = discord.Embed(title="⚽ All Footballers", color=0x5865F2)
+        for card in footballers[i:i+per_page]:
+            income_rate = card.get('income_rate', 1)
             embed.add_field(
                 name=f"{card['name']} ({card['rarity']})",
-                value=f"💰 Price: ${card['price']:,}\n📈 Income: {card.get('income_rate', 1)}/30min",
-                inline=True
+                value=f"💰 ${card['price']:,} | 🕐 {income_rate}/30min",
+                inline=False
             )
-        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(sorted_players)-1)//per_page + 1} | Use !shop to buy!")
+        embed.set_footer(text=f"Page {i//per_page + 1}/{(len(footballers)-1)//per_page + 1} | Use !buy <player> to purchase")
         pages.append(embed)
     await paged_embed_navigation(ctx, pages)
 
@@ -1472,16 +1526,14 @@ async def leaderboard(ctx: commands.Context):
     for i, (uid, bal) in enumerate(items, 1):
         try:
             user = await bot.fetch_user(int(uid))
-            name = user.name if user else f"User {uid}"
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            embed.add_field(
+                name=f"{medal} {user.name if user else uid}",
+                value=f"${int(bal):,} Tadbucks",
+                inline=False
+            )
         except Exception:
-            name = f"User {uid}"
-        
-        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-        embed.add_field(
-            name=f"{medal} {name}",
-            value=f"${int(bal):,}",
-            inline=False
-        )
+            embed.add_field(name=f"{i}. {str(uid)}", value=f"${int(bal):,} Tadbucks", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -1491,86 +1543,42 @@ async def points_leaderboard(ctx: commands.Context):
     for i, (uid, pts) in enumerate(items, 1):
         try:
             user = await bot.fetch_user(int(uid))
-            name = user.name if user else f"User {uid}"
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            embed.add_field(
+                name=f"{medal} {user.name if user else uid}",
+                value=f"{int(pts)} points",
+                inline=False
+            )
         except Exception:
-            name = f"User {uid}"
-            
-        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-        embed.add_field(
-            name=f"{medal} {name}",
-            value=f"{int(pts):,} pts",
-            inline=False
-        )
+            embed.add_field(name=f"{i}. {str(uid)}", value=f"{int(pts)} points", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
 async def collection_status(ctx: commands.Context, member: Optional[discord.Member] = None):
     member = member or ctx.author
     coll = data["user_collections"].get(str(member.id), [])
-    await ctx.send(f"📊 {member.display_name} has **{len(coll)}/{MAX_COLLECTION_SLOTS}** cards.")
+    await ctx.send(f"📊 {member.display_name} has {len(coll)}/{MAX_COLLECTION_SLOTS} cards.")
 
 # -----------------------------
-# Enhanced Passive Income Commands
+# Passive Income Commands
 # -----------------------------
 @bot.command()
 async def passiveincome(ctx):
     user_id = str(ctx.author.id)
     if user_id not in last_income_report:
-        await ctx.send(f"💸 {ctx.author.mention}, you haven't received a passive income payout yet!\nCards generate income every **30 minutes** based on their rarity and value.")
+        await ctx.send(f"💸 {ctx.author.mention}, you haven't received a passive income payout yet. Wait for the next 30-minute cycle!")
     else:
         payout = last_income_report[user_id]
-        embed = discord.Embed(
-            title="💰 Latest Passive Income Report", 
-            color=0x00ff00
-        )
-        embed.add_field(
-            name="Last Payout", 
-            value=f"**${payout:,} Tadbucks** 💸", 
-            inline=True
-        )
-        embed.add_field(
-            name="Next Payout", 
-            value="⏰ Within 30 minutes", 
-            inline=True
-        )
-        embed.set_footer(text="💡 Tip: Rarer cards generate more income!")
-        await ctx.send(embed=embed)
+        await ctx.send(f"💰 {ctx.author.mention}, your most recent passive income payout was **{payout:,} Tadbucks** 📈")
 
 @bot.command()
 async def income(ctx, arg: str = None):
     user_id = str(ctx.author.id)
     if arg and arg.lower() == "total":
         total = total_income_tracker.get(user_id, 0)
-        
-        embed = discord.Embed(
-            title="📊 Total Income Report",
-            description=f"{ctx.author.mention}'s lifetime earnings",
-            color=0xf1c40f
-        )
-        embed.add_field(
-            name="Total Passive Income Earned",
-            value=f"**${total:,} Tadbucks** 💰",
-            inline=False
-        )
-        
-        # Calculate potential income from current collection
-        coll = data["user_collections"].get(user_id, [])
-        potential_income = sum(card.get("income_rate", 1) for card in coll)
-        
-        embed.add_field(
-            name="Current Collection Income Rate",
-            value=f"**${potential_income:,}** every 30 minutes",
-            inline=True
-        )
-        embed.add_field(
-            name="Cards Owned",
-            value=f"{len(coll)}/{MAX_COLLECTION_SLOTS}",
-            inline=True
-        )
-        
-        await ctx.send(embed=embed)
+        await ctx.send(f"📊 {ctx.author.mention}, you've earned a total of **{total:,} Tadbucks** from passive income since I started tracking! 💎")
     else:
-        await ctx.send(f"📈 {ctx.author.mention}, use `!income total` to see your total lifetime earnings from passive income!")
+        await ctx.send(f"📈 {ctx.author.mention}, usage: `!income total` to see your lifetime passive earnings!")
 
 @bot.command()
 async def messagesleft(ctx):
@@ -1580,28 +1588,7 @@ async def messagesleft(ctx):
     current_level = current_xp // LEVEL_UP_XP_THRESHOLD
     xp_in_current_level = current_xp % LEVEL_UP_XP_THRESHOLD
     xp_remaining = LEVEL_UP_XP_THRESHOLD - xp_in_current_level
-    
-    embed = discord.Embed(
-        title="📊 Level Progress", 
-        color=0x9932cc
-    )
-    embed.add_field(
-        name="Current Level", 
-        value=f"**{current_level}**", 
-        inline=True
-    )
-    embed.add_field(
-        name="XP to Next Level", 
-        value=f"**{xp_remaining}** messages", 
-        inline=True
-    )
-    embed.add_field(
-        name="Level Up Rewards", 
-        value=f"💰 ${LEVEL_REWARD_TADBUCKS:,}\n🏆 {LEVEL_REWARD_TADZZY} Points", 
-        inline=True
-    )
-    
-    await ctx.send(embed=embed)
+    await ctx.send(f"📊 {ctx.author.mention}, you need **{xp_remaining} XP** more to reach level {current_level + 1}! (Currently level {current_level})")
 
 # -----------------------------
 # Error handling
@@ -1615,7 +1602,7 @@ async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.BadArgument):
         return await ctx.send("❌ Bad argument. Please check your inputs.")
     print("Unhandled command error:", error)
-    await ctx.send(f"An error occurred: {error}")
+    await ctx.send(f"❌ An error occurred: {error}")
 
 # -----------------------------
 # Graceful shutdown
